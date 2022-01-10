@@ -1,0 +1,36 @@
+tasks:
+  - source: tasks.raw.get_births
+    product:
+      data: _products/raw/births.parquet
+
+  - source: tasks.raw.get_stillbirths
+    product: 
+      data: _products/raw/stillbirths.parquet
+
+  - source: tasks.rates.get_annual
+    product:
+      data: _products/rates/rates-by-year.parquet
+
+  - source: tasks.rates.get_quinquenial
+    product: 
+      data: _products/rates/rates-by-quinquenios.parquet
+
+  - source: scripts/plot-births.py
+    product:
+      nb: _output/plot-births.ipynb
+      data: _output/plot-births.pdf
+
+  - source: scripts/plot-stillbirths.py
+    product:
+      nb: _output/plot-stillbirths.ipynb
+      data: _output/plot-stillbirths.pdf
+
+  - source: scripts/plot-rates-years.py
+    product:
+      nb: _output/plot-rates-years.ipynb
+      data: _output/plot-rates-years.pdf
+
+  - source: scripts/plot-rates-quinquenios.py
+    product:
+      nb: _output/plot-rates-quinquenios.ipynb
+      data: _output/plot-rates-quinquenios.pdf
