@@ -34,3 +34,7 @@ tasks:
     product:
       nb: _output/plot-rates-quinquenios.ipynb
       data: _output/plot-rates-quinquenios.pdf
+      
+  - source: scripts/profile-annual-rates.py
+    product:
+      nb: profiles/profile-annual-rates.html

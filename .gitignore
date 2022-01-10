@@ -14,3 +14,6 @@ ipython_config.py
 # pipeline outputs
 _output
 _products
+
+# cache files
+*/__pycache__/*

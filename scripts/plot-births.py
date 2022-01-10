@@ -10,6 +10,7 @@ import seaborn
 import os
 import shutil
 import pdfkit
+from pandas_profiling import ProfileReport
 
 # + tags=["parameters"]
 upstream = ["get_births"]
