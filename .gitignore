@@ -12,8 +12,8 @@ ipython_config.py
 #   git rm -r .ipynb_checkpoints/
 
 # pipeline outputs
-_output
-_products
+*/_output/
+*/_products/
 
 # cache files
 */__pycache__/*

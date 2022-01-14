@@ -1,1 +1,0 @@
-{"timestamp": 1641842389.997362, "stored_source_code": "\"\"\"\nPlot departamental rates by years\n\"\"\"\nimport pandas\nfrom pandas_profiling import ProfileReport\nupstream = [\"get_annual\"]\nproduct = None\n# Leer tasas\ndf = pandas.read_parquet(upstream['get_annual']['data'])\n# Profile\nProfileReport(df, title=\"Annual Rates Data Profiling Report\")\n", "params": {}}
