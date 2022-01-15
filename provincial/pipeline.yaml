@@ -45,12 +45,18 @@ tasks:
     product: _products/lineplots/quinquenales
 
   # Report:
-  - source: tasks.report.create
-    name: report_create
+  - source: tasks.report.create_annual
+    name: create_annual_report
     params:
       rates_param: '{{rates_people_param}}'
-    product: _output/report.pdf
-  
+    product: _output/report_annual.pdf
+
+  - source: tasks.report.create_quinquennal
+    name: create_quinquennal_report
+    params:
+      rates_param: '{{rates_people_param}}'
+    product: _output/report_quinquennal.pdf
+
   # Data profiling:
   - source: scripts/profile-annual-rates.py
     product:

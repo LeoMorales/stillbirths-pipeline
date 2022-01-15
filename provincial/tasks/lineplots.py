@@ -111,49 +111,11 @@ def by_years(product, upstream):
         plt.close()
 
 
-# -
-
-def __get_dataset_quinquennios(df, periods):
-    tasas_provinciales_por_periodos = {}
-    for i, period in enumerate(periods):
-        dataset_i =df\
-            [df['año'].isin(periods[period])]\
-            .drop(columns=['año', 'tasa'])\
-            .groupby(['provincia_id'])\
-            .sum()\
-            .reset_index()
-
-        dataset_i['tasa'] = \
-            (dataset_i['fallecimientos'] / dataset_i['nacimientos']) *10_000
-
-        dataset_i['periodo'] = period
-
-        tasas_provinciales_por_periodos[period] = dataset_i
-
-    print("OK.")
-    provincial_quinquenios_dataset = pandas.DataFrame()
-    for i, period in enumerate(tasas_provinciales_por_periodos):
-        provincial_quinquenios_dataset = pandas.concat([
-            provincial_quinquenios_dataset,
-            tasas_provinciales_por_periodos[period]
-        ])
-
-    return provincial_quinquenios_dataset
-
-
 # + tags=[]
 def by_quinquennio(product, upstream):
-    df = pandas.read_parquet(upstream['get_annual']['data'])
-    periods = {
-        '1994-1998': [1994, 1995, 1996, 1997, 1998],
-        '1999-2003': [1999, 2000, 2001, 2002, 2003],
-        '2004-2008': [2004, 2005, 2006, 2007, 2008],
-        '2009-2013': [2009, 2010, 2011, 2012, 2013],
-        '2014-2019': [2014, 2015, 2016, 2017, 2018, 2019],
-    }
+    df_quinquenios = pandas.read_parquet(upstream['get_quinquenial']['data'])
     provincias_id_nombre = __get_province_name_by_id()
-    provincial_quinquenios_dataset = __get_dataset_quinquennios(df, periods)
-    
+
     # setup:
     parent = Path(product)
 
@@ -167,8 +129,8 @@ def by_quinquennio(product, upstream):
     
     for province_id in provincias_id_nombre:
         # pick only one
-        data_i = provincial_quinquenios_dataset\
-            [provincial_quinquenios_dataset.provincia_id == province_id]
+        data_i = df_quinquenios\
+            [df_quinquenios.provincia_id == province_id]
 
         f, _, _ = __create_figure_provincial_rates(
             data_i['periodo'],

@@ -76,10 +76,41 @@ def by_years(product, upstream):
     plt.close();
 
 
+# + active=""
+#
+# periods = {
+#     '1994-1998': [1994, 1995, 1996, 1997, 1998],
+#     '1999-2003': [1999, 2000, 2001, 2002, 2003],
+#     '2004-2008': [2004, 2005, 2006, 2007, 2008],
+#     '2009-2013': [2009, 2010, 2011, 2012, 2013],
+#     '2014-2019': [2014, 2015, 2016, 2017, 2018, 2019],
+# }
+#
+# tasas_provinciales_por_periodos = {}
+# for i, period in enumerate(periods):
+#     print(f"Recolectando datos para el período: {period}...")
+#     dataset_i = df\
+#         [df['año'].isin(periods[period])]\
+#         .drop(columns=['año', 'tasa'])\
+#         .groupby(['provincia_id'])\
+#         .sum()\
+#         .reset_index()
+#
+#     dataset_i['tasa'] = \
+#         (dataset_i['fallecimientos'] / dataset_i['nacimientos']) *10_000
+#
+#     dataset_i['periodo'] = period
+#
+#     tasas_provinciales_por_periodos[period] = dataset_i
+#
+# print("OK.")
+#
+
 # + tags=[]
 def by_quinquenios(product, upstream):
-
-    df = pandas.read_parquet(upstream['get_annual']['data'])
+    '''Dibuja los paras de tasas por quinquenios
+    '''
+    df = pandas.read_parquet(upstream['get_quinquenial']['data'])
     
     SHAPE_DIR = '/home/lmorales/work/stillbirth-book/notebooks/shapes/provincias.geojson'
     shape = geopandas.read_file(SHAPE_DIR)
@@ -89,33 +120,6 @@ def by_quinquenios(product, upstream):
     
     cmap = seaborn.diverging_palette(250, 5, as_cmap=True)
 
-    periods = {
-        '1994-1998': [1994, 1995, 1996, 1997, 1998],
-        '1999-2003': [1999, 2000, 2001, 2002, 2003],
-        '2004-2008': [2004, 2005, 2006, 2007, 2008],
-        '2009-2013': [2009, 2010, 2011, 2012, 2013],
-        '2014-2019': [2014, 2015, 2016, 2017, 2018, 2019],
-    }
-    
-    tasas_provinciales_por_periodos = {}
-    for i, period in enumerate(periods):
-        print(f"Recolectando datos para el período: {period}...")
-        dataset_i = df\
-            [df['año'].isin(periods[period])]\
-            .drop(columns=['año', 'tasa'])\
-            .groupby(['provincia_id'])\
-            .sum()\
-            .reset_index()
-
-        dataset_i['tasa'] = \
-            (dataset_i['fallecimientos'] / dataset_i['nacimientos']) *10_000
-
-        dataset_i['periodo'] = period
-
-        tasas_provinciales_por_periodos[period] = dataset_i
-
-    print("OK.")
-
     f, ax = plt.subplots(
         nrows=1, ncols=5,
         figsize=(26, 8),
@@ -123,13 +127,13 @@ def by_quinquenios(product, upstream):
     )
     axs = ax.flatten()
 
-    for i, period in enumerate(tasas_provinciales_por_periodos):
+    for i, (period, df_period) in enumerate(df.groupby('periodo')):
         # == Map: ==
         ax = axs[i]
 
         provincial_i = pandas.merge(
             shape,
-            tasas_provinciales_por_periodos[period],
+            df_period,
             on='provincia_id',
             how='left'
         )
