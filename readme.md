@@ -13,8 +13,11 @@ Using ploomber pipelines:
 
 ![departamental](./departamental/pipeline.png)
 
+
 ## Provincial pipeline:
 
 ![provincial](./provincial/pipeline.png)
 
+## Regional pipeline:
 
+![regional](./regional/pipeline.png)
