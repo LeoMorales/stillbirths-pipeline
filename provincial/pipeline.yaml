@@ -9,7 +9,7 @@ tasks:
 
   - source: tasks.raw.get_stillbirths
     params:
-      input_file: '{{dataset_mortinatos_path}}'
+      raw_data_folder: '{{datasets_mortinatos_path}}'
     product: 
       data: _products/raw/stillbirths.parquet
     on_finish: tests.raw.test_stillbirths_clean

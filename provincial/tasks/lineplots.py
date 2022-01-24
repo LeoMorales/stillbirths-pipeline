@@ -76,7 +76,6 @@ def __get_province_name_by_id():
     }
 
 
-
 # + tags=[]
 def by_years(product, upstream):
     df = pandas.read_parquet(upstream['get_annual']['data'])
@@ -143,6 +142,3 @@ def by_quinquennio(product, upstream):
         output_file = f"{str(product)}/{province_path_name}.png"
         f.savefig(output_file, dpi=300)
         plt.close()
-# -
-
-

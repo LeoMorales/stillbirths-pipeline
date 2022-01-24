@@ -24,7 +24,6 @@ def __get_report_template():
             <head>
                 <meta charset='utf-8'>
                 <title>PDF - Tasas departamentales por año</title>
-                <link rel='stylesheet' href='report.css'>
                 <style>
                     h1 {{
                         font-family: Arial;
@@ -64,7 +63,7 @@ def create_annual(product, upstream, rates_param):
     # add maps:
     report_content += f'''
         <h2 align="center">Mapas anuales</h2>
-        <p align="center">Cantidad de casos sobre {rates_param} nacimientos</p>
+        <p align="center">Mortinatos sobre {rates_param} nacimientos</p>
     '''
     report_content += __get_fig_template(str(upstream['maps_by_years']), 1200, 1200)
 
@@ -72,7 +71,7 @@ def create_annual(product, upstream, rates_param):
     report_content += f'''
         <div style = "display:block; clear:both; page-break-after:always;"></div>
         <h2 align="center">Tasas anuales por provincias</h2>
-        <p align="center">Cantidad de casos sobre {rates_param} nacimientos</p>
+        <p align="center">Mortinatos sobre {rates_param} nacimientos</p>
     '''
 
     # add map figures:
@@ -128,7 +127,7 @@ def create_quinquennal(product, upstream, rates_param):
     # add maps:
     report_content += f'''
         <h2 align="center">Mapas quinquenales</h2>
-        <p align="center">Cantidad de casos sobre {rates_param} nacimientos</p>
+        <p align="center">Mortinatos sobre {rates_param} nacimientos</p>
     '''
     report_content += __get_fig_template(str(upstream['maps_by_quinquenios']), 1200, 400)
 
@@ -136,7 +135,7 @@ def create_quinquennal(product, upstream, rates_param):
     report_content += f'''
         <div style = "display:block; clear:both; page-break-after:always;"></div>
         <h2 align="center">Tasas quinquenales por provincias</h2>
-        <p align="center">Cantidad de casos sobre {rates_param} nacimientos</p>
+        <p align="center">Mortinatos sobre {rates_param} nacimientos</p>
     '''
 
     # add map figures:

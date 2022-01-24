@@ -4,15 +4,19 @@
 Raw
 """
 import pandas
+import glob
 
 
 def __clean_province_code(code):
     '''Limpia el código de provincia'''
-    return '0'+str(code) if (len(str(code)) == 1) else str(code)
+    if code == None: return None
+    
+    return '0'+str(int(code))\
+        if (len(str(int(code))) == 1) else str(int(code))
 
 def get_births(product, input_file):
     # # Nacidos vivos
-    datos_nacidos_vivos = pandas.read_csv(
+    raw_df = pandas.read_excel(
         input_file,
         dtype={
             'PROVRES': object,
@@ -21,74 +25,103 @@ def get_births(product, input_file):
     )
     # # Limpiar
     # limpiamos las columnas
-    datos_nacidos_vivos['CUENTA'] = \
-        datos_nacidos_vivos['CUENTA'].astype('int')
-    birth_data = datos_nacidos_vivos.copy()
-    birth_data.loc[:, 'provincia_id'] = \
-        birth_data.loc[:, 'PROVRES'].apply(__clean_province_code)
-    birth_data = birth_data.rename(
+    raw_df['CUENTA'] = \
+        raw_df['CUENTA'].astype('int')
+    df = raw_df.copy()
+    df.loc[:, 'provincia_id'] = \
+        df.loc[:, 'PROVRES'].apply(__clean_province_code)
+    df = df.rename(
         columns={'AÑO': 'año', 'CUENTA': 'nacimientos'}
     )
-    birth_data['año'] = \
-        birth_data['año']\
-            .astype('str')\
-            .str\
-            .replace('.', '')\
-            .replace(
-                {'201': 2010, '20': 2000}
-            )\
-            .astype(int)
+    df['año'] = \
+        df['año'].astype(int)
 
     # # Proyectar
-    birth_data_provinces = \
-        birth_data\
-            [['provincia_id', 'año', 'nacimientos']]      
+    output_df = \
+        df[['provincia_id', 'año', 'nacimientos']]
 
     # # Agrupar
-    birth_data_provinces = \
-        birth_data_provinces\
+    output_df = \
+        output_df\
             .groupby(['provincia_id', 'año'])\
             .sum()\
             .reset_index()
     # Guardar
 
     # df.to_csv(str(product['data']), index=False)
-    birth_data_provinces.to_parquet(
+    output_df.to_parquet(
         str(product['data']), index=False)
 
-def get_stillbirths(product, input_file):
+def get_stillbirths(product, raw_data_folder):
     # # Mortinatos
-    datos_defunciones_fetales = pandas.read_csv(
-        input_file,
-        dtype={'PROVRES': object, 'DEPRES': object}
-    )
 
+    #csv_nacimientos_dir = '../../../datasets/nacimientos/'
+    raw_df = pandas.DataFrame()
+    for filename in glob.glob(f"{raw_data_folder}/*.xlsx"):
+        raw_data_i = pandas.read_excel(
+            filename,
+            dtype={
+                'MPRORES': int,
+                'PROVRES': int,
+                'MPROVRES': int,
+                'AÑO': int,
+                'ANO': int,
+            }
+        )
+
+        raw_data_i = raw_data_i.rename(columns={
+            'MPRORES': 'provincia_codigo',
+            'JURIREG': 'jurisdiccion_codigo',
+            'PROVRES': 'provincia_codigo',
+            'MDEPRES': 'departamento_codigo',
+            'MPROVRES': 'provincia_codigo',
+            'MPAISRES': 'pais_codigo',
+            'AÑO': 'año',
+            'JURI': 'jurisdiccion_codigo',
+            'ANO': 'año',
+            'DEPRES': 'departamento_codigo',
+            'CODMUER': 'codigo_muerte',
+            'CAUSAMUER': 'codigo_muerte',
+            'COD': 'codigo_muerte',
+        })
+
+        raw_data_i = raw_data_i[['año', 'provincia_codigo', 'codigo_muerte']]
+        raw_df = pandas.concat(
+            [raw_df, raw_data_i])    
+    
     # # Limpiar
-    decease_data = datos_defunciones_fetales.copy()
-    decease_data.loc[:, 'provincia_id'] = \
-        decease_data.loc[:, 'PROVRES'].apply(__clean_province_code)
-    decease_data = decease_data.rename(
-        columns={'AÑO': 'año'}
-    )
-    decease_data['año'] = \
-        decease_data['año']\
+    df = raw_df.copy()
+    df.loc[:, 'provincia_id'] = \
+        df.loc[:, 'provincia_codigo'].apply(__clean_province_code)
+    df['año'] = \
+        df['año']\
             .astype('str')\
             .str\
             .replace('.', '')\
             .replace(
-                {'201': 2010, '20': 2000}
+                {
+                    '201': 2010,
+                    '20': 2000,
+                    '98': 1998,
+                    '97': 1997,
+                    '99': 1999,
+                    '0': 2000,
+                    '9': 2009,
+                    '2033': 2003
+                }
             )\
             .astype(int)
 
     # # Agrupar
-    decease_data_provinces = \
-        decease_data\
-        [['provincia_id', 'año', 'CAUSAMUER']]\
+    output_df = \
+        df\
+        [['provincia_id', 'año', 'codigo_muerte']]\
         .groupby(['provincia_id', 'año'])\
         .count()\
         .reset_index()\
-        .rename(columns={'CAUSAMUER': 'fallecimientos'})
+        .rename(columns={'codigo_muerte': 'fallecimientos'})
     
     # # Guardar
-    decease_data_provinces.to_parquet(
+    output_df.to_parquet(
         str(product['data']), index=False)
+
