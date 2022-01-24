@@ -9,17 +9,17 @@ import os
 import pdfkit
 import glob
 import PIL
+import datetime
 
 
 # +
-def __get_report_template():
+def __get_report_template(title):
     return f'''
     <!DOCTYPE html>
         <html>
             <head>
                 <meta charset='utf-8'>
-                <title>PDF - Tasas departamentales por año</title>
-                <link rel='stylesheet' href='report.css'>
+                <title>{title}</title>
                 <style>
                     h1 {{
                         font-family: Arial;
@@ -55,7 +55,7 @@ def __get_fig_template(fig_src: str, width: int, height: int) -> str:
 # + tags=[]
 def create_annual(product, upstream, rates_param):
 
-    report_content = __get_report_template()
+    report_content = __get_report_template("Regional - Tasas anuales")
     # add maps:
     report_content += f'''
         <h2 align="center">Mapas anuales</h2>
@@ -90,7 +90,8 @@ def create_annual(product, upstream, rates_param):
     report_content += '''
         </html>
     '''
-
+    # ct stores current time
+    report_timestamp = str(datetime.datetime.now())
     options = {
         'page-size': 'Letter',
         'margin-top': '0.75in',
@@ -98,9 +99,12 @@ def create_annual(product, upstream, rates_param):
         'margin-bottom': '0.75in',
         'margin-left': '0.75in',
         'encoding': "UTF-8",
-        'no-outline': None
+        'no-outline': None,
+        'footer-left': f"Reporte generado: {report_timestamp}",
+        'footer-line':'',
+        'footer-font-size':'7',
+        'footer-right': '[page] of [topage]'       
     }
-
     # Save HTML string to file
     HTML_REPORT_DIR = "tmp_report_years.html"
     with open(HTML_REPORT_DIR, "w") as r:
@@ -119,7 +123,7 @@ def create_annual(product, upstream, rates_param):
 # + tags=[]
 def create_quinquennal(product, upstream, rates_param):
 
-    report_content = __get_report_template()
+    report_content = __get_report_template("Regional - Tasas quinquenales")
     # add maps:
     report_content += f'''
         <h2 align="center">Mapas quinquenales</h2>
@@ -155,6 +159,8 @@ def create_quinquennal(product, upstream, rates_param):
         </html>
     '''
 
+    # ct stores current time
+    report_timestamp = str(datetime.datetime.now())
     options = {
         'page-size': 'Letter',
         'margin-top': '0.75in',
@@ -162,7 +168,11 @@ def create_quinquennal(product, upstream, rates_param):
         'margin-bottom': '0.75in',
         'margin-left': '0.75in',
         'encoding': "UTF-8",
-        'no-outline': None
+        'no-outline': None,
+        'footer-left': f"Reporte generado: {report_timestamp}",
+        'footer-line':'',
+        'footer-font-size':'7',
+        'footer-right': '[page] of [topage]'       
     }
 
     # Save HTML string to file
