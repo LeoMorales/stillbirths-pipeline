@@ -67,6 +67,17 @@ def create_annual(product, upstream, rates_param):
     '''
     report_content += __get_fig_template(str(upstream['maps_by_years']), 1200, 1200)
 
+    # add table:
+    image_table = PIL.Image.open(str(upstream['table_by_years']))
+    width_table, height_table = image_table.size
+    basewidth = 1200
+    wpercent = (basewidth / float(width_table))
+    hsize = int((float(height_table) * float(wpercent)))
+    img = image_table.resize((basewidth, hsize), PIL.Image.ANTIALIAS)
+    RESIZED_IMAGE_DIR = './table_years.png'
+    img.save(RESIZED_IMAGE_DIR)
+    report_content += __get_fig_template(RESIZED_IMAGE_DIR, 1200, 600)
+
     # add lineplots:
     report_content += f'''
         <div style = "display:block; clear:both; page-break-after:always;"></div>
@@ -118,6 +129,7 @@ def create_annual(product, upstream, rates_param):
 
     # remove the tmp data
     os.remove(HTML_REPORT_DIR)
+    os.remove(RESIZED_IMAGE_DIR)
 
 
 # + tags=[]
@@ -129,7 +141,27 @@ def create_quinquennal(product, upstream, rates_param):
         <h2 align="center">Mapas quinquenales</h2>
         <p align="center">Mortinatos sobre {rates_param} nacimientos</p>
     '''
-    report_content += __get_fig_template(str(upstream['maps_by_quinquenios']), 1200, 400)
+    image_map = PIL.Image.open(str(upstream['maps_by_quinquenios']))
+    width_table, height_table = image_map.size
+    basewidth = 1200
+    wpercent = (basewidth / float(width_table))
+    hsize = int((float(height_table) * float(wpercent)))
+    img = image_map.resize((basewidth, hsize), PIL.Image.ANTIALIAS)
+    RESIZED_MAP_DIR = './map_quinquennial.png'
+    img.save(RESIZED_MAP_DIR)
+    report_content += __get_fig_template(RESIZED_MAP_DIR, basewidth, hsize)
+    #report_content += __get_fig_template(str(upstream['maps_by_quinquenios']), 1_200, 400)
+
+    # add table:
+    image_table = PIL.Image.open(str(upstream['table_by_quinquenios']))
+    width_table, height_table = image_table.size
+    basewidth = 1200
+    wpercent = (basewidth / float(width_table))
+    hsize = int((float(height_table) * float(wpercent)))
+    img = image_table.resize((basewidth, hsize), PIL.Image.ANTIALIAS)
+    RESIZED_IMAGE_DIR = './table_quinquennial.png'
+    img.save(RESIZED_IMAGE_DIR)
+    report_content += __get_fig_template(RESIZED_IMAGE_DIR, basewidth, hsize)
 
     # add lineplots:
     report_content += f'''
@@ -182,3 +214,5 @@ def create_quinquennal(product, upstream, rates_param):
 
     # remove the tmp data
     os.remove(HTML_REPORT_DIR)
+    os.remove(RESIZED_IMAGE_DIR)
+    os.remove(RESIZED_MAP_DIR)

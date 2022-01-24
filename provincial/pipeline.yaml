@@ -44,6 +44,14 @@ tasks:
     name: lineplots_by_quinquennio
     product: _products/lineplots/quinquenales
 
+  - source: tasks.tables.by_quinquennios
+    name: table_by_quinquenios
+    product: _products/tables/table-by-quinquenios.png
+
+  - source: tasks.tables.by_years
+    name: table_by_years
+    product: _products/tables/table-by-years.png
+
   # Report:
   - source: tasks.report.create_annual
     name: create_annual_report

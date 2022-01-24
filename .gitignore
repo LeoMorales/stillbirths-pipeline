@@ -17,3 +17,4 @@ ipython_config.py
 
 # cache files
 */__pycache__/*
+*.pyc
