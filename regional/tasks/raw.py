@@ -4,6 +4,7 @@
 Raw
 """
 import pandas
+import glob
 
 REGION_BY_PROVINCE_CODE = {
     '38': 'NOA',
@@ -35,100 +36,128 @@ REGION_BY_PROVINCE_CODE = {
 
 def __clean_province_code(code):
     '''Limpia el código de provincia'''
-    return '0'+str(code) if (len(str(code)) == 1) else str(code)
+    if code == None: return None
+    
+    return '0'+str(int(code))\
+        if (len(str(int(code))) == 1) else str(int(code))
 
 def get_births(product, raw_births_file):
     # # Nacidos vivos
-    datos_nacidos_vivos = pandas.read_csv(
+    df = pandas.read_excel(
         raw_births_file,
         dtype={
             'PROVRES': object,
-            'DEPRES': object,
         }
     )
-    
+
     # # Limpiar
     # limpiamos las columnas
-    datos_nacidos_vivos['CUENTA'] = \
-        datos_nacidos_vivos['CUENTA'].astype('int')
-    birth_data = datos_nacidos_vivos.copy()
-    birth_data.loc[:, 'provincia_id'] = \
-        birth_data.loc[:, 'PROVRES'].apply(__clean_province_code)
-    birth_data = birth_data.rename(
+    df['CUENTA'] = \
+        df['CUENTA'].astype('int')
+    df.loc[:, 'provincia_id'] = \
+        df.loc[:, 'PROVRES'].apply(__clean_province_code)
+    df = df.rename(
         columns={'AÑO': 'año', 'CUENTA': 'nacimientos'}
     )
-    birth_data['año'] = \
-        birth_data['año']\
-            .astype('str')\
-            .str\
-            .replace('.', '')\
-            .replace(
-                {'201': 2010, '20': 2000}
-            )\
-            .astype(int)
+    df['año'] = \
+        df['año'].astype(int)
 
     # obtener nombre de la region
-    birth_data['region_nombre'] = birth_data.provincia_id.apply(
+    df['region_nombre'] = df.provincia_id.apply(
         lambda provincia_id: REGION_BY_PROVINCE_CODE.get(provincia_id, None)
     )
-    birth_data = birth_data.dropna(subset=['region_nombre'])
+    df = df.dropna(subset=['region_nombre'])
 
     # # Filtrar columnas
-    birth_data_regions = \
-        birth_data\
+    output_df = \
+        df\
             [['region_nombre', 'año', 'nacimientos']]      
 
     # # Agrupar
-    birth_data_regions = \
-        birth_data_regions\
+    output_df = \
+        output_df\
             .groupby(['region_nombre', 'año'])\
             .sum()\
             .reset_index()
 
     # Guardar
     # df.to_csv(str(product['data']), index=False)
-    birth_data_regions.to_parquet(
+    output_df.to_parquet(
         str(product['data']), index=False)
 
-def get_stillbirths(product, raw_stillbirths_file):
+def get_stillbirths(product, raw_stillbirths_folder):
     # # Mortinatos
-    datos_defunciones_fetales = pandas.read_csv(
-        raw_stillbirths_file,
-        dtype={'PROVRES': object, 'DEPRES': object}
-    )
+    raw_df = pandas.DataFrame()
+    for filename in glob.glob(f"{raw_stillbirths_folder}/*.xlsx"):
+        raw_data_i = pandas.read_excel(
+            filename,
+            dtype={
+                'MPRORES': int,
+                'PROVRES': int,
+                'MPROVRES': int,
+                'AÑO': int,
+                'ANO': int,
+            }
+        )
 
+        raw_data_i = raw_data_i.rename(columns={
+            'MPRORES': 'provincia_codigo',
+            'JURIREG': 'jurisdiccion_codigo',
+            'PROVRES': 'provincia_codigo',
+            'MDEPRES': 'departamento_codigo',
+            'MPROVRES': 'provincia_codigo',
+            'MPAISRES': 'pais_codigo',
+            'AÑO': 'año',
+            'JURI': 'jurisdiccion_codigo',
+            'ANO': 'año',
+            'DEPRES': 'departamento_codigo',
+            'CODMUER': 'codigo_muerte',
+            'CAUSAMUER': 'codigo_muerte',
+            'COD': 'codigo_muerte',
+        })
+
+        raw_data_i = raw_data_i[['año', 'provincia_codigo', 'codigo_muerte']]
+        raw_df = pandas.concat(
+            [raw_df, raw_data_i])    
+    
     # # Limpiar
-    decease_data = datos_defunciones_fetales.copy()
-    decease_data.loc[:, 'provincia_id'] = \
-        decease_data.loc[:, 'PROVRES'].apply(__clean_province_code)
-    decease_data = decease_data.rename(
-        columns={'AÑO': 'año'}
-    )
-    decease_data['año'] = \
-        decease_data['año']\
+    df = raw_df.copy()
+    df.loc[:, 'provincia_id'] = \
+        df.loc[:, 'provincia_codigo'].apply(__clean_province_code)
+    df['año'] = \
+        df['año']\
             .astype('str')\
             .str\
             .replace('.', '')\
             .replace(
-                {'201': 2010, '20': 2000}
+                {
+                    '201': 2010,
+                    '20': 2000,
+                    '98': 1998,
+                    '97': 1997,
+                    '99': 1999,
+                    '0': 2000,
+                    '9': 2009,
+                    '2033': 2003
+                }
             )\
             .astype(int)
 
     # obtener nombre de la region
-    decease_data['region_nombre'] = decease_data.provincia_id.apply(
+    df['region_nombre'] = df.provincia_id.apply(
         lambda provincia_id: REGION_BY_PROVINCE_CODE.get(provincia_id, None)
     )
-    decease_data = decease_data.dropna(subset=['region_nombre'])
+    df = df.dropna(subset=['region_nombre'])
     
     # # Agrupar
-    decease_data_regions = \
-        decease_data\
-        [['region_nombre', 'año', 'CAUSAMUER']]\
+    output_df = \
+        df\
+        [['region_nombre', 'año', 'codigo_muerte']]\
         .groupby(['region_nombre', 'año'])\
         .count()\
         .reset_index()\
-        .rename(columns={'CAUSAMUER': 'fallecimientos'})
+        .rename(columns={'codigo_muerte': 'fallecimientos'})
     
     # # Guardar
-    decease_data_regions.to_parquet(
+    output_df.to_parquet(
         str(product['data']), index=False)

@@ -9,7 +9,7 @@ tasks:
 
   - source: tasks.raw.get_stillbirths
     params:
-      raw_stillbirths_file: '{{dataset_mortinatos_path}}'
+      raw_stillbirths_folder: '{{dataset_mortinatos_path}}'
     product: 
       data: _products/raw/stillbirths.parquet
     on_finish: tests.raw.test_stillbirths_clean
@@ -45,6 +45,14 @@ tasks:
   - source: tasks.lineplots.by_quinquennio
     name: lineplots_by_quinquennio
     product: _products/lineplots/quinquenales
+
+  - source: tasks.tables.by_quinquennios
+    name: table_by_quinquenios
+    product: _products/tables/table-by-quinquenios.png
+
+  - source: tasks.tables.by_years
+    name: table_by_years
+    product: _products/tables/table-by-years.png
 
   # Report:
   - source: tasks.report.create_annual

@@ -63,10 +63,21 @@ def create_annual(product, upstream, rates_param):
     '''
     report_content += __get_fig_template(str(upstream['maps_by_years']), 1200, 1200)
 
+    # add table:
+    width_table, height_table = PIL.Image.open(str(upstream['table_by_years'])).size
+    basewidth = 1200
+    wpercent = (basewidth / float(width_table))
+    hsize = int((float(height_table) * float(wpercent)))
+    report_content += __get_fig_template(
+        str(upstream['table_by_years']),
+        basewidth,
+        hsize
+    )
+
     # add lineplots:
     report_content += f'''
         <div style = "display:block; clear:both; page-break-after:always;"></div>
-        <h2 align="center">Tasas anuales por provincias</h2>
+        <h2 align="center">Tasas anuales por regiones</h2>
         <p align="center">Cantidad de casos sobre {rates_param} nacimientos</p>
     '''
 
@@ -131,10 +142,21 @@ def create_quinquennal(product, upstream, rates_param):
     '''
     report_content += __get_fig_template(str(upstream['maps_by_quinquenios']), 1200, 400)
 
+    # add table:
+    width_table, height_table = PIL.Image.open(str(upstream['table_by_quinquenios'])).size
+    basewidth = 1200
+    wpercent = (basewidth / float(width_table))
+    hsize = int((float(height_table) * float(wpercent)))
+    report_content += __get_fig_template(
+        str(upstream['table_by_quinquenios']),
+        basewidth,
+        hsize
+    )
+
     # add lineplots:
     report_content += f'''
         <div style = "display:block; clear:both; page-break-after:always;"></div>
-        <h2 align="center">Tasas quinquenales por provincias</h2>
+        <h2 align="center">Tasas quinquenales por regiones</h2>
         <p align="center">Cantidad de casos sobre {rates_param} nacimientos</p>
     '''
 
