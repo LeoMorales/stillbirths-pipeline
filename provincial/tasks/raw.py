@@ -19,8 +19,9 @@ def get_births(product, input_file):
     raw_df = pandas.read_excel(
         input_file,
         dtype={
-            'PROVRES': object,
+            'PROVRES': int,
             'DEPRES': object,
+            'AÑO': int
         }
     )
     # # Limpiar
@@ -54,8 +55,6 @@ def get_births(product, input_file):
 
 def get_stillbirths(product, raw_data_folder):
     # # Mortinatos
-
-    #csv_nacimientos_dir = '../../../datasets/nacimientos/'
     raw_df = pandas.DataFrame()
     for filename in glob.glob(f"{raw_data_folder}/*.xlsx"):
         raw_data_i = pandas.read_excel(
