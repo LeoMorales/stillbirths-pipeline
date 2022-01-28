@@ -51,11 +51,25 @@ def __get_fig_template(fig_src: str, width: int, height: int) -> str:
     '''
 
 
+# -
+
+def __resize_image(image_path, basewidth):
+    input_image = PIL.Image.open(image_path)
+    img_width, img_height = input_image.size
+    
+    wpercent = (basewidth / float(img_width))
+    hsize = int((float(img_height) * float(wpercent)))
+    img = input_image.resize((basewidth, hsize), PIL.Image.ANTIALIAS)
+    base_name = image_path.split('/')[-1].rstrip('.png')
+    output_image_path = f'./{base_name}_{datetime.datetime.now().isoformat()}.png'
+    img.save(output_image_path)
+    return output_image_path, basewidth, hsize
+
 
 # + tags=[]
 def create_annual(product, upstream, rates_param):
 
-    report_content = __get_report_template("Provincial - Tasas anuales")
+    report_content = __get_report_template("Departamental - Tasas anuales")
     # add maps:
     report_content += f'''
         <h2 align="center">Mapas anuales</h2>
@@ -64,15 +78,8 @@ def create_annual(product, upstream, rates_param):
     report_content += __get_fig_template(str(upstream['maps_by_years']), 1200, 1200)
 
     # add table:
-    image_table = PIL.Image.open(str(upstream['table_by_years']))
-    width_table, height_table = image_table.size
-    basewidth = 1200
-    wpercent = (basewidth / float(width_table))
-    hsize = int((float(height_table) * float(wpercent)))
-    img = image_table.resize((basewidth, hsize), PIL.Image.ANTIALIAS)
-    RESIZED_IMAGE_DIR = './table_years.png'
-    img.save(RESIZED_IMAGE_DIR)
-    report_content += __get_fig_template(RESIZED_IMAGE_DIR, 1200, 600)
+    #RESIZED_IMAGE_DIR = __resize_image(str(upstream['table_by_years']), basewidth=1_200)
+    #report_content += __get_fig_template(RESIZED_IMAGE_DIR, 1200, 600)
 
     # add lineplots:
     report_content += f'''
@@ -131,39 +138,27 @@ def create_annual(product, upstream, rates_param):
 
     # remove the tmp data
     os.remove(HTML_REPORT_DIR)
-    os.remove(RESIZED_IMAGE_DIR)
+    #os.remove(RESIZED_IMAGE_DIR)
 
 
 # + tags=[]
 def create_quinquennal(product, upstream, rates_param):
 
-    report_content = __get_report_template("Provincial - Tasas quinquenales")
+    report_content = __get_report_template("Departamentos - Tasas quinquenales")
     # add maps:
     report_content += f'''
         <h2 align="center">Mapas quinquenales</h2>
         <p align="center">Mortinatos sobre {rates_param} nacimientos</p>
     '''
-    image_map = PIL.Image.open(str(upstream['maps_by_quinquenios']))
-    width_table, height_table = image_map.size
-    basewidth = 1200
-    wpercent = (basewidth / float(width_table))
-    hsize = int((float(height_table) * float(wpercent)))
-    img = image_map.resize((basewidth, hsize), PIL.Image.ANTIALIAS)
-    RESIZED_MAP_DIR = './map_quinquennial.png'
-    img.save(RESIZED_MAP_DIR)
-    report_content += __get_fig_template(RESIZED_MAP_DIR, basewidth, hsize)
-    #report_content += __get_fig_template(str(upstream['maps_by_quinquenios']), 1_200, 400)
-
+    tmp_files = []
     # add table:
-    image_table = PIL.Image.open(str(upstream['table_by_quinquenios']))
-    width_table, height_table = image_table.size
-    basewidth = 1200
-    wpercent = (basewidth / float(width_table))
-    hsize = int((float(height_table) * float(wpercent)))
-    img = image_table.resize((basewidth, hsize), PIL.Image.ANTIALIAS)
-    RESIZED_IMAGE_DIR = './table_quinquennial.png'
-    img.save(RESIZED_IMAGE_DIR)
-    report_content += __get_fig_template(RESIZED_IMAGE_DIR, basewidth, hsize)
+    RESIZED_IMAGE_DIR, w, h = __resize_image(str(upstream['maps_by_quinquenios']), basewidth=1_200)
+    report_content += __get_fig_template(RESIZED_IMAGE_DIR, w, h)
+    tmp_files.append(RESIZED_IMAGE_DIR)
+    
+    # add table:
+    # str(upstream['table_by_quinquenios'])
+    # report_content += __get_fig_template(RESIZED_IMAGE_DIR, basewidth, hsize)
 
     # add lineplots:
     report_content += f'''
@@ -173,7 +168,7 @@ def create_quinquennal(product, upstream, rates_param):
     '''
 
     # add map figures:
-    figure_names = [str(name) for name in sorted(glob.glob(f"{upstream['lineplots_by_quinquennio']}/*.png"))]
+    figure_names = [str(name) for name in sorted(glob.glob(f"{upstream['lineplots_by_quinquennios']}/*.png"))]
 
     FIGURE_MAX_WIDTH = 1200
     for figure_name in figure_names:
@@ -223,5 +218,5 @@ def create_quinquennal(product, upstream, rates_param):
 
     # remove the tmp data
     os.remove(HTML_REPORT_DIR)
-    os.remove(RESIZED_IMAGE_DIR)
-    os.remove(RESIZED_MAP_DIR)
+    for tmp_file in tmp_files:
+        os.remove(tmp_file)

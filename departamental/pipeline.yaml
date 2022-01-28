@@ -2,47 +2,58 @@ tasks:
   # Get:
   - source: tasks.raw.get_births
     params:
-      input_file: '{{dataset_nacimientos_path}}'
+      raw_births_file: '{{dataset_nacimientos_path}}'
     product:
       data: _products/raw/births.parquet
+    on_finish: tests.raw.test_births_clean
 
   - source: tasks.raw.get_stillbirths
     params:
-      input_file: '{{dataset_mortinatos_path}}'
+      raw_stillbirths_folder: '{{dataset_mortinatos_path}}'
     product: 
       data: _products/raw/stillbirths.parquet
+    on_finish: tests.raw.test_stillbirths_clean
 
   # Process
   - source: tasks.rates.get_annual
+    params:
+      rates_over: '{{rates_people_param}}'
     product:
       data: _products/rates/rates-by-year.parquet
 
   - source: tasks.rates.get_quinquenial
+    params:
+      rates_over: '{{rates_people_param}}'
     product: 
       data: _products/rates/rates-by-quinquenios.parquet
 
-  # Plot
-  - source: scripts/plot-births.py
-    product:
-      nb: _output/plot-births.ipynb
-      data: _output/plot-births.pdf
+  # Figures:
+  - source: tasks.maps.by_years
+    name: maps_by_years
+    product: _products/maps/maps-by-years.png
 
-  - source: scripts/plot-stillbirths.py
-    product:
-      nb: _output/plot-stillbirths.ipynb
-      data: _output/plot-stillbirths.pdf
+  - source: tasks.maps.by_quinquenios
+    name: maps_by_quinquenios
+    product: _products/maps/maps-by-quinquenios.png
 
-  - source: scripts/plot-rates-years.py
-    product:
-      nb: _output/plot-rates-years.ipynb
-      data: _output/plot-rates-years.pdf
+  - source: tasks.lineplots.by_years
+    name: lineplots_by_years
+    product: _products/lineplots/anuales
 
-  - source: scripts/plot-rates-quinquenios.py
-    product:
-      nb: _output/plot-rates-quinquenios.ipynb
-      data: _output/plot-rates-quinquenios.pdf
-      
-  # Data profiling:
-  #- source: scripts/profile-annual-rates.py
-  #  product:
-  #    nb: _output/profile-annual-rates.ipynb
+  - source: tasks.lineplots.by_quinquennios
+    name: lineplots_by_quinquennios
+    product: _products/lineplots/quinquenales
+
+  # Report:
+  - source: tasks.report.create_annual
+    name: create_annual_report
+    params:
+      rates_param: '{{rates_people_param}}'
+    product: _output/reporte_anual.pdf
+
+  - source: tasks.report.create_quinquennal
+    name: create_quinquennal_report
+    params:
+      rates_param: '{{rates_people_param}}'
+    product: _output/reporte_quinquenal.pdf
+

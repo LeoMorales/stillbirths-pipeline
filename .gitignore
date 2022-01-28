@@ -17,4 +17,7 @@ ipython_config.py
 
 # cache files
 */__pycache__/*
+departamental/tasks/__pycache__/
+provincial/tasks/__pycache__/
+regional/tasks/__pycache__/
 *.pyc
