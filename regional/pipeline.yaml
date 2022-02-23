@@ -40,11 +40,11 @@ tasks:
 
   - source: tasks.lineplots.by_years
     name: lineplots_by_years
-    product: _products/lineplots/anuales
+    product: _products/lineplots/lineplot-anual.png
 
   - source: tasks.lineplots.by_quinquennio
     name: lineplots_by_quinquennio
-    product: _products/lineplots/quinquenales
+    product: _products/lineplots/lineplot-quinquenal.png
 
   - source: tasks.tables.by_quinquennios
     name: table_by_quinquenios

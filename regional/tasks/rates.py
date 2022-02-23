@@ -36,7 +36,6 @@ def get_annual(product, upstream, rates_over):
 
     # # Guardar
 
-    # df.to_csv(str(product['data']), index=False)
     df_rates.to_parquet(
         str(product['data']), index=False
     )

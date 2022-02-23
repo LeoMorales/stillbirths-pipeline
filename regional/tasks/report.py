@@ -82,19 +82,18 @@ def create_annual(product, upstream, rates_param):
     '''
 
     # add map figures:
-    figure_names = [str(name) for name in sorted(glob.glob(f"{upstream['lineplots_by_years']}/*.png"))]
+    #figure_names = [str(name) for name in sorted(glob.glob(f"{upstream['lineplots_by_years']}/*.png"))]
 
     FIGURE_MAX_WIDTH = 1200
-    for figure_name in figure_names:
-        # add figures to report:
-        image = PIL.Image.open(figure_name)
-        width, height = image.size
-        # achicar el ancho de la fihura según la relación
-        # ancho de la figura - ancho máximo
-        height_max = height * (FIGURE_MAX_WIDTH / width)
-        if height_max < height:
-            height = height_max
-        report_content += __get_fig_template(figure_name, FIGURE_MAX_WIDTH, height)
+    # add figures to report:
+    image = PIL.Image.open(str(upstream['lineplots_by_years']))
+    width, height = image.size
+    # achicar el ancho de la fihura según la relación
+    # ancho de la figura - ancho máximo
+    height_max = height * (FIGURE_MAX_WIDTH / width)
+    if height_max < height:
+        height = height_max
+    report_content += __get_fig_template(str(upstream['lineplots_by_years']), FIGURE_MAX_WIDTH, height)
 
 
     # close
@@ -161,19 +160,16 @@ def create_quinquennal(product, upstream, rates_param):
     '''
 
     # add map figures:
-    figure_names = [str(name) for name in sorted(glob.glob(f"{upstream['lineplots_by_quinquennio']}/*.png"))]
-
-    FIGURE_MAX_WIDTH = 1200
-    for figure_name in figure_names:
-        # add figures to report:
-        image = PIL.Image.open(figure_name)
-        width, height = image.size
-        # achicar el ancho de la fihura según la relación
-        # ancho de la figura - ancho máximo
-        height_max = height * (FIGURE_MAX_WIDTH / width)
-        if height_max < height:
-            height = height_max
-        report_content += __get_fig_template(figure_name, FIGURE_MAX_WIDTH, height)
+    FIGURE_MAX_WIDTH = 1_000
+    # add figures to report:
+    image = PIL.Image.open(str(upstream['lineplots_by_quinquennio']))
+    width, height = image.size
+    # achicar el ancho de la fihura según la relación
+    # ancho de la figura - ancho máximo
+    height_max = height * (FIGURE_MAX_WIDTH / width)
+    if height_max < height:
+        height = height_max
+    report_content += __get_fig_template(str(upstream['lineplots_by_quinquennio']), FIGURE_MAX_WIDTH, height)
 
 
     # close

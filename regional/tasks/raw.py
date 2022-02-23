@@ -114,6 +114,7 @@ def get_stillbirths(product, raw_stillbirths_folder):
             'CODMUER': 'codigo_muerte',
             'CAUSAMUER': 'codigo_muerte',
             'COD': 'codigo_muerte',
+            'CAUSAMUERCIE10': 'codigo_muerte',
         })
 
         raw_data_i = raw_data_i[['año', 'provincia_codigo', 'codigo_muerte']]

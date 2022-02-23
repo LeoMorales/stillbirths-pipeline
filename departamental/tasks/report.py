@@ -68,7 +68,15 @@ def __resize_image(image_path, basewidth):
 
 # + tags=[]
 def create_annual(product, upstream, rates_param):
-
+    ''' Crea el reporte final por año.
+    
+    Necesita que las figuras productos de lineplots y tablas de calor tengan
+    nombres de provincias que contienen a los departamento, reemplazados los espacios
+    por guiones bajos y si tienen algún sufijo tambien es válido:
+    Buenos_Aires.png [ok]
+    Buenos_Aires_1.png [ok]
+    Buenos Aires.png [NO]
+    '''
     report_content = __get_report_template("Departamental - Tasas anuales")
     # add maps:
     report_content += f'''
@@ -88,21 +96,36 @@ def create_annual(product, upstream, rates_param):
         <p align="center">Mortinatos sobre {rates_param} nacimientos</p>
     '''
 
-    # add map figures:
-    figure_names = [str(name) for name in sorted(glob.glob(f"{upstream['lineplots_by_years']}/*.png"))]
+    # add table figures:
+    table_names = [str(name) for name in sorted(glob.glob(f"{upstream['tables_by_years']}/*.png"))]
+    tmp_files = []
+    
+    for table_name in table_names:
+        province_i = table_name.split('/')[-1].replace('.png', '')
 
-    FIGURE_MAX_WIDTH = 1200
-    for figure_name in figure_names:
-        # add figures to report:
-        image = PIL.Image.open(figure_name)
-        width, height = image.size
-        # achicar el ancho de la fihura según la relación
-        # ancho de la figura - ancho máximo
-        height_max = height * (FIGURE_MAX_WIDTH / width)
-        if height_max < height:
-            height = height_max
-        report_content += __get_fig_template(figure_name, FIGURE_MAX_WIDTH, height)
+        # add map figures:
+        figure_names = [
+            str(name)
+            for name
+            in sorted(glob.glob(f"{upstream['lineplots_by_years']}/{province_i}*.png"))
+        ]
 
+        FIGURE_MAX_WIDTH = 1200
+        for figure_name in figure_names:
+            # add figures to report:
+            image = PIL.Image.open(figure_name)
+            width, height = image.size
+            # achicar el ancho de la fihura según la relación
+            # ancho de la figura - ancho máximo
+            height_max = height * (FIGURE_MAX_WIDTH / width)
+            if height_max < height:
+                height = height_max
+            report_content += __get_fig_template(figure_name, FIGURE_MAX_WIDTH, height)
+
+        # add table:
+        RESIZED_IMAGE_DIR, w, h = __resize_image(table_name, basewidth=1_200)
+        report_content += __get_fig_template(RESIZED_IMAGE_DIR, w, h)
+        tmp_files.append(RESIZED_IMAGE_DIR)    
 
     # close
     report_content += '''
@@ -139,6 +162,8 @@ def create_annual(product, upstream, rates_param):
     # remove the tmp data
     os.remove(HTML_REPORT_DIR)
     #os.remove(RESIZED_IMAGE_DIR)
+    for tmp_file in tmp_files:
+        os.remove(tmp_file)
 
 
 # + tags=[]
@@ -181,7 +206,6 @@ def create_quinquennal(product, upstream, rates_param):
         if height_max < height:
             height = height_max
         report_content += __get_fig_template(figure_name, FIGURE_MAX_WIDTH, height)
-
 
     # close
     report_content += '''
