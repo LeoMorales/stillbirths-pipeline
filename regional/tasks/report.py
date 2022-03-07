@@ -106,6 +106,28 @@ class Report:
                     </body>
                 </html>
             '''
+    
+    def build(self, destination):
+        # destination = str(product)
+        
+        # set current time
+        PDF_EXPORT_OPTIONS['footer-left'] = f"Reporte generado: {str(datetime.datetime.now())}"
+        # Save HTML string to file
+        HTML_REPORT_DIR = "tmp_report_years.html"
+
+        with open(HTML_REPORT_DIR, "w") as r:
+            r.write(self.get_report_text())
+
+        #Use pdfkit to create the pdf report from the 
+        pdfkit.from_file(
+            HTML_REPORT_DIR,
+            destination,
+            options=PDF_EXPORT_OPTIONS
+        ) 
+
+        # remove the tmp data
+        os.remove(HTML_REPORT_DIR)
+
     def __resize_image(self, image_path, basewidth):
         input_image = PIL.Image.open(image_path)
         img_width, img_height = input_image.size
@@ -156,23 +178,7 @@ def create_annual(product, upstream, rates_param, deceases_codes):
         finish_with_page_break=False
     )
 
-    # set current time
-    PDF_EXPORT_OPTIONS['footer-left'] = f"Reporte generado: {str(datetime.datetime.now())}"
-    # Save HTML string to file
-    HTML_REPORT_DIR = "tmp_report_years.html"
-    
-    with open(HTML_REPORT_DIR, "w") as r:
-        r.write(report.get_report_text())
-    
-    #Use pdfkit to create the pdf report from the 
-    pdfkit.from_file(
-        HTML_REPORT_DIR,
-        str(product),
-        options=PDF_EXPORT_OPTIONS
-    ) 
-
-    # remove the tmp data
-    os.remove(HTML_REPORT_DIR)
+    report.build(str(product))
     for tmp_file in report.tmp_files:
         print(f"removing {tmp_file}...")
         os.remove(tmp_file)
@@ -207,24 +213,8 @@ def create_quinquennal(product, upstream, rates_param, deceases_codes):
         finish_with_page_break=False
     )
 
-
-    # set current time
-    PDF_EXPORT_OPTIONS['footer-left'] = f"Reporte generado: {str(datetime.datetime.now())}"
-    # Save HTML string to file
-    HTML_REPORT_DIR = "tmp_report_quinquennios.html"
+    report.build(str(product))
     
-    with open(HTML_REPORT_DIR, "w") as r:
-        r.write(report.get_report_text())
-    
-    #Use pdfkit to create the pdf report from the 
-    pdfkit.from_file(
-        HTML_REPORT_DIR,
-        str(product),
-        options=PDF_EXPORT_OPTIONS
-    ) 
-
-    # remove the tmp data
-    os.remove(HTML_REPORT_DIR)
     for tmp_file in report.tmp_files:
         print(f"removing {tmp_file}...")
         os.remove(tmp_file)
