@@ -10,6 +10,7 @@ tasks:
   - source: tasks.raw.get_stillbirths
     params:
       raw_stillbirths_folder: '{{dataset_mortinatos_path}}'
+      deceases_codes: '{{deceases_codes}}'
     product: 
       data: _products/raw/stillbirths.parquet
     on_finish: tests.raw.test_stillbirths_clean
@@ -40,10 +41,14 @@ tasks:
 
   - source: tasks.lineplots.by_years
     name: lineplots_by_years
+    params:
+      rates_over: '{{rates_people_param}}'
     product: _products/lineplots/lineplot-anual.png
 
   - source: tasks.lineplots.by_quinquennio
     name: lineplots_by_quinquennio
+    params:
+      rates_over: '{{rates_people_param}}'
     product: _products/lineplots/lineplot-quinquenal.png
 
   - source: tasks.tables.by_quinquennios
@@ -59,13 +64,15 @@ tasks:
     name: create_annual_report
     params:
       rates_param: '{{rates_people_param}}'
-    product: _output/report_annual.pdf
+      deceases_codes: '{{deceases_codes}}'
+    product: _output/reporte-anual.pdf
 
   - source: tasks.report.create_quinquennal
     name: create_quinquennal_report
     params:
       rates_param: '{{rates_people_param}}'
-    product: _output/report_quinquennal.pdf
+      deceases_codes: '{{deceases_codes}}'
+    product: _output/reporte-quinquenal.pdf
 
   # Data profiling:
   - source: scripts/profile-annual-rates.py

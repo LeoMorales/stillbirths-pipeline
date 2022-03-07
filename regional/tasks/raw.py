@@ -85,7 +85,7 @@ def get_births(product, raw_births_file):
     output_df.to_parquet(
         str(product['data']), index=False)
 
-def get_stillbirths(product, raw_stillbirths_folder):
+def get_stillbirths(product, raw_stillbirths_folder, deceases_codes):
     # # Mortinatos
     raw_df = pandas.DataFrame()
     for filename in glob.glob(f"{raw_stillbirths_folder}/*.xlsx"):
@@ -149,7 +149,11 @@ def get_stillbirths(product, raw_stillbirths_folder):
         lambda provincia_id: REGION_BY_PROVINCE_CODE.get(provincia_id, None)
     )
     df = df.dropna(subset=['region_nombre'])
+    df['codigo_muerte'] = df.codigo_muerte.str.strip().str.upper()    
     
+    deceases_codes = list(set([code.strip().upper() for code in deceases_codes]))
+    df = df[df.codigo_muerte.isin(deceases_codes)]
+
     # # Agrupar
     output_df = \
         df\

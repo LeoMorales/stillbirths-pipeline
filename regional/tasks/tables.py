@@ -42,9 +42,9 @@ def by_quinquennios(product, upstream):
     df = df.drop(columns=['region_nombre'])
 
     # agregar la fila de valor medio para el año
-    mean_row = pandas.DataFrame([df.mean(axis=0).to_dict()])
-    mean_row.index = ['Valor medio']
-    df = pandas.concat([df, mean_row])
+    #mean_row = pandas.DataFrame([df.mean(axis=0).to_dict()])
+    #mean_row.index = ['Valor medio']
+    #df = pandas.concat([df, mean_row])
 
     # crear figura
     cmap = seaborn.diverging_palette(250, 5, as_cmap=True)
@@ -85,9 +85,9 @@ def by_years(product, upstream):
     ]
 
     # agregar la fila de valor medio para el año
-    mean_row = pandas.DataFrame([df.mean(axis=0).to_dict()])
-    mean_row.index = ['Valor medio']
-    df = pandas.concat([df, mean_row])
+    #mean_row = pandas.DataFrame([df.mean(axis=0).to_dict()])
+    #mean_row.index = ['Valor medio']
+    #df = pandas.concat([df, mean_row])
 
     # crear figura
     cmap = seaborn.diverging_palette(250, 5, as_cmap=True)
