@@ -6,32 +6,7 @@ Raw
 import pandas
 import glob
 
-REGION_BY_PROVINCE_CODE = {
-    '38': 'NOA',
-    '66': 'NOA',
-    '34': 'NEA',
-    '22': 'NEA',
-    '10': 'NOA',
-    '86': 'NOA',
-    '54': 'NEA',
-    '90': 'NOA',
-    '18': 'NEA',
-    '46': 'NOA',
-    '82': 'Centro',
-    '70': 'Cuyo',
-    '14': 'Centro',
-    '30': 'Centro',
-    '74': 'Cuyo',
-    '50': 'Cuyo',
-    '06': 'Centro',
-    '02': 'Centro',
-    '42': 'Centro',
-    '58': 'Patagonia',
-    '62': 'Patagonia',
-    '26': 'Patagonia',
-    '78': 'Patagonia',
-    '94': 'Patagonia'
-}
+from stillbirths_package.utils import REGION_BY_PROVINCE_CODE
 
 
 def __clean_province_code(code):
@@ -85,42 +60,30 @@ def get_births(product, raw_births_file):
     output_df.to_parquet(
         str(product['data']), index=False)
 
-def get_stillbirths(product, raw_stillbirths_folder, deceases_codes):
+def get_stillbirths(product, raw_stillbirths_file, deceases_codes):
     # # Mortinatos
-    raw_df = pandas.DataFrame()
-    for filename in glob.glob(f"{raw_stillbirths_folder}/*.xlsx"):
-        raw_data_i = pandas.read_excel(
-            filename,
-            dtype={
-                'MPRORES': int,
-                'PROVRES': int,
-                'MPROVRES': int,
-                'AÑO': int,
-                'ANO': int,
-            }
-        )
+    raw_df = pandas.read_excel(
+        raw_stillbirths_file,
+        dtype={
+            'JURIREG': int,
+            'PROVRES': int,
+            'CAUSAMUERCIE10': str,
+            'AÑO': int,
+        }
+    )
 
-        raw_data_i = raw_data_i.rename(columns={
-            'MPRORES': 'provincia_codigo',
-            'JURIREG': 'jurisdiccion_codigo',
-            'PROVRES': 'provincia_codigo',
-            'MDEPRES': 'departamento_codigo',
-            'MPROVRES': 'provincia_codigo',
-            'MPAISRES': 'pais_codigo',
-            'AÑO': 'año',
-            'JURI': 'jurisdiccion_codigo',
-            'ANO': 'año',
-            'DEPRES': 'departamento_codigo',
-            'CODMUER': 'codigo_muerte',
-            'CAUSAMUER': 'codigo_muerte',
-            'COD': 'codigo_muerte',
-            'CAUSAMUERCIE10': 'codigo_muerte',
-        })
+    raw_df = raw_df.rename(columns={
+        'JURIREG': 'jurisdiccion_codigo',
+        'PROVRES': 'provincia_codigo',
+        'DEPRES': 'departamento_codigo',
+        'CAUSAMUERCIE10': 'codigo_muerte',
+        'AÑO': 'año',
+        'TIEMGEST': 'tiempo_gestacion',
+        'PESOFETO': 'peso_feto',
+    })
 
-        raw_data_i = raw_data_i[['año', 'provincia_codigo', 'codigo_muerte']]
-        raw_df = pandas.concat(
-            [raw_df, raw_data_i])    
-    
+    raw_df = raw_df[['año', 'provincia_codigo', 'codigo_muerte']]
+
     # # Limpiar
     df = raw_df.copy()
     df.loc[:, 'provincia_id'] = \

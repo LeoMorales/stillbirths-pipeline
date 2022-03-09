@@ -9,7 +9,7 @@ tasks:
 
   - source: tasks.raw.get_stillbirths
     params:
-      raw_stillbirths_folder: '{{dataset_mortinatos_path}}'
+      raw_stillbirths_file: '{{dataset_mortinatos_path}}'
       deceases_codes: '{{deceases_codes}}'
     product: 
       data: _products/raw/stillbirths.parquet

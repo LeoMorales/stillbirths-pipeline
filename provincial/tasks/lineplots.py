@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # + tags=[]
 """
-Plot departamental rates by years
+Plot departamental rates in lines
 """
 import pandas
 import geopandas
@@ -16,104 +16,82 @@ import glob
 import PIL
 from pathlib import Path
 
+from stillbirths_package.utils import REGION_BY_PROVINCE_CODE, PROVINCE_NAME_BY_ID
+
 
 # -
 
-def __create_figure_provincial_rates(t, nacimientos, mortinatos, tasa,
-        figure_title=f"Nacimientos, mortinatos y tasas"):
-    f_height = 4
-    f_width  = 8
-    fig, ax1 = plt.subplots(figsize=(f_width, f_height), constrained_layout=True)
+def __create_figure(data, lines_by_col, time_col, figure_title, output_file, xlabel):
+    # reorder (pivot)
+    plot_data = data.pivot(index=time_col, columns=lines_by_col)
+    plot_data.index.name = None
+    plot_data.columns = pandas.Index([c for _, c in plot_data.columns])
 
-    ax1.set_xlabel('años')
-    ax1.set_ylabel(
-        'Nacimientos (azul)\n\nMortinatos (rojo)',
-        rotation=0,
-        ha='right'
-    )
-    ax1.plot(
-        t,
-        nacimientos,
-        color='tab:blue'
-    )
-
-    ax1.plot(
-        t,
-        mortinatos,
-        color='tab:red'
-    )
-
-    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
-
-    color = 'tab:orange'
-    ax2.set_ylabel(
-        'Tasa',
-        color=color,
-        rotation=0,
-        ha='left'
-    )  # we already handled the x-label with ax1
-    ax2.plot(t, tasa, color=color, marker='.')
-    ax2.tick_params(axis='y', labelcolor=color)
-
-    #fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    ax1.set_title(figure_title)
+    # plot
+    f, ax = plt.subplots(figsize=(12, 8))
+    custom_params = {"axes.spines.right": False, "axes.spines.top": False}
+    seaborn.set_theme(style="whitegrid", rc=custom_params)
+    seaborn.lineplot(data=plot_data)
+    ax.set_xlabel(xlabel, fontsize=14)
+    ax.set_ylabel('Tasa', fontsize=14)
+    f.suptitle(
+        figure_title,
+        fontsize=16)
     
-    return fig, ax1, ax2
-
-
-def __get_province_name_by_id():
-    SHAPE_DIR = '/home/lmorales/work/stillbirth-book/notebooks/shapes/departamentos.geojson'
-    shape = geopandas.read_file(SHAPE_DIR)
-    shape = shape[[
-        'provincia_id', 'provincia_nombre',
-        'departamento_id', 'departamento_nombre',
-        'region_indec', 'geometry']]
-
-    return {
-        item['provincia_id']: item['provincia_nombre']
-        for item
-        in shape[['provincia_id', 'provincia_nombre']].to_dict(orient='records')
-    }
-
-
-# + tags=[]
-def by_years(product, upstream):
-    df = pandas.read_parquet(upstream['get_annual']['data'])
-
-    provincias_id_nombre = __get_province_name_by_id()
-
-    # setup:
-    parent = Path(product)
-
-    # clean up products from the previous run, if any. Otherwise they'll be
-    # mixed with the current files
-    if parent.exists():
-        shutil.rmtree(parent)
-
-    # make sure the directory exists
-    parent.mkdir(exist_ok=True, parents=True)
-    
-    for province_id in provincias_id_nombre:
-        # pick only one
-        data_i = df[df.provincia_id == province_id]
-
-        f, _, _ = __create_figure_provincial_rates(
-            data_i['año'],
-            data_i.nacimientos,
-            data_i.fallecimientos,
-            data_i.tasa,
-            figure_title=f"Nacimientos, mortinatos y tasas para {provincias_id_nombre[province_id]}"
-        )
-        province_path_name = provincias_id_nombre[province_id].replace(' ', '_').strip().lower()
-        output_file = f"{str(product)}/{province_path_name}.png"
-        f.savefig(output_file, dpi=300)
-        plt.close()
+    # save
+    f.savefig(output_file, dpi=300)
+    plt.close()
 
 
 # + tags=[]
 def by_quinquennio(product, upstream):
-    df_quinquenios = pandas.read_parquet(upstream['get_quinquenial']['data'])
-    provincias_id_nombre = __get_province_name_by_id()
+    # setup:
+    parent = Path(product)
+
+    # clean up products from the previous run, if any. Otherwise they'll be
+    # mixed with the current files
+    if parent.exists():
+        shutil.rmtree(parent)
+
+    # make sure the directory exists
+    parent.mkdir(exist_ok=True, parents=True)
+
+    # read the data
+    df = pandas.read_parquet(upstream['get_quinquenial']['data'])
+
+    # get region names
+    regions = list(set(REGION_BY_PROVINCE_CODE.values()))
+
+    # create province name column
+    df['provincia_nombre'] = df.provincia_id.replace(PROVINCE_NAME_BY_ID)
+
+    lines_by_col = 'provincia_nombre'
+    time_col = 'periodo'
+    work_cols = [time_col, lines_by_col, 'tasa']
+    
+    for region_i in regions:
+        
+        province_codes = [
+            code
+            for code, region
+            in REGION_BY_PROVINCE_CODE.items()
+            if region == region_i
+        ]
+        
+        data = df[df.provincia_id.isin(province_codes)][work_cols]
+        provinces_in_region_path_name = region_i.lower()
+        output_file = f"{str(product)}/{provinces_in_region_path_name}.png"
+        
+        __create_figure(
+            data, lines_by_col, time_col,
+            figure_title=f"Tasas de mortinatos\nProvincias de la región {region_i}\nPeríodo: 1994-2019",
+            output_file=output_file,
+            xlabel='Quinquenio'
+        )
+
+
+# + tags=[]
+def by_years(product, upstream):
 
     # setup:
     parent = Path(product)
@@ -126,19 +104,36 @@ def by_quinquennio(product, upstream):
     # make sure the directory exists
     parent.mkdir(exist_ok=True, parents=True)
     
-    for province_id in provincias_id_nombre:
-        # pick only one
-        data_i = df_quinquenios\
-            [df_quinquenios.provincia_id == province_id]
+    # read the data
+    df = pandas.read_parquet(upstream['get_annual']['data'])
 
-        f, _, _ = __create_figure_provincial_rates(
-            data_i['periodo'],
-            data_i.nacimientos,
-            data_i.fallecimientos,
-            data_i.tasa,
-            figure_title=f"Nacimientos, mortinatos y tasas para {provincias_id_nombre[province_id]}"
+    # get region names
+    regions = list(set(REGION_BY_PROVINCE_CODE.values()))
+
+    # create province name column
+    df['provincia_nombre'] = df.provincia_id.replace(PROVINCE_NAME_BY_ID)
+
+    lines_by_col = 'provincia_nombre'
+    time_col = 'año'
+    work_cols = [time_col, lines_by_col, 'tasa']
+    
+    # for each region
+    for region_i in regions:
+        
+        province_codes = [
+            code
+            for code, region
+            in REGION_BY_PROVINCE_CODE.items()
+            if region == region_i
+        ]
+        
+        data = df[df.provincia_id.isin(province_codes)][work_cols]
+        provinces_in_region_path_name = region_i.lower()
+        output_file = f"{str(product)}/{provinces_in_region_path_name}.png"
+        
+        __create_figure(
+            data, lines_by_col, time_col,
+            figure_title=f"Tasas de mortinatos\nProvincias de la región {region_i}\nPeríodo: 1994-2019",
+            output_file=output_file,
+            xlabel='Año'
         )
-        province_path_name = provincias_id_nombre[province_id].replace(' ', '_').strip().lower()
-        output_file = f"{str(product)}/{province_path_name}.png"
-        f.savefig(output_file, dpi=300)
-        plt.close()

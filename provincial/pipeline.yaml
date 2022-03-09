@@ -9,7 +9,8 @@ tasks:
 
   - source: tasks.raw.get_stillbirths
     params:
-      raw_data_folder: '{{datasets_mortinatos_path}}'
+      raw_stillbirths_file: '{{datasets_mortinatos_path}}'
+      deceases_codes: '{{deceases_codes}}'
     product: 
       data: _products/raw/stillbirths.parquet
     on_finish: tests.raw.test_stillbirths_clean
@@ -57,12 +58,14 @@ tasks:
     name: create_annual_report
     params:
       rates_param: '{{rates_people_param}}'
+      deceases_codes: '{{deceases_codes}}'
     product: _output/report_annual.pdf
 
   - source: tasks.report.create_quinquennal
     name: create_quinquennal_report
     params:
       rates_param: '{{rates_people_param}}'
+      deceases_codes: '{{deceases_codes}}'
     product: _output/report_quinquennal.pdf
 
   # Data profiling:

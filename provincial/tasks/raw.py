@@ -53,41 +53,30 @@ def get_births(product, input_file):
     output_df.to_parquet(
         str(product['data']), index=False)
 
-def get_stillbirths(product, raw_data_folder):
+def get_stillbirths(product, raw_stillbirths_file, deceases_codes):
     # # Mortinatos
-    raw_df = pandas.DataFrame()
-    for filename in glob.glob(f"{raw_data_folder}/*.xlsx"):
-        raw_data_i = pandas.read_excel(
-            filename,
-            dtype={
-                'MPRORES': int,
-                'PROVRES': int,
-                'MPROVRES': int,
-                'AÑO': int,
-                'ANO': int,
-            }
-        )
+    raw_df = pandas.read_excel(
+        raw_stillbirths_file,
+        dtype={
+            'JURIREG': int,
+            'PROVRES': int,
+            'CAUSAMUERCIE10': str,
+            'AÑO': int,
+        }
+    )
 
-        raw_data_i = raw_data_i.rename(columns={
-            'MPRORES': 'provincia_codigo',
-            'JURIREG': 'jurisdiccion_codigo',
-            'PROVRES': 'provincia_codigo',
-            'MDEPRES': 'departamento_codigo',
-            'MPROVRES': 'provincia_codigo',
-            'MPAISRES': 'pais_codigo',
-            'AÑO': 'año',
-            'JURI': 'jurisdiccion_codigo',
-            'ANO': 'año',
-            'DEPRES': 'departamento_codigo',
-            'CODMUER': 'codigo_muerte',
-            'CAUSAMUER': 'codigo_muerte',
-            'COD': 'codigo_muerte',
-        })
+    raw_df = raw_df.rename(columns={
+        'JURIREG': 'jurisdiccion_codigo',
+        'PROVRES': 'provincia_codigo',
+        'DEPRES': 'departamento_codigo',
+        'CAUSAMUERCIE10': 'codigo_muerte',
+        'AÑO': 'año',
+        'TIEMGEST': 'tiempo_gestacion',
+        'PESOFETO': 'peso_feto',
+    })
 
-        raw_data_i = raw_data_i[['año', 'provincia_codigo', 'codigo_muerte']]
-        raw_df = pandas.concat(
-            [raw_df, raw_data_i])    
-    
+    raw_df = raw_df[['año', 'provincia_codigo', 'codigo_muerte']]
+
     # # Limpiar
     df = raw_df.copy()
     df.loc[:, 'provincia_id'] = \
@@ -110,6 +99,11 @@ def get_stillbirths(product, raw_data_folder):
                 }
             )\
             .astype(int)
+
+    # Filtrar códigos de muerte indicados:
+    df['codigo_muerte'] = df.codigo_muerte.str.strip().str.upper()    
+    deceases_codes = list(set([code.strip().upper() for code in deceases_codes]))
+    df = df[df.codigo_muerte.isin(deceases_codes)]
 
     # # Agrupar
     output_df = \
