@@ -5,7 +5,6 @@ Raw
 """
 import pandas
 import glob
-
 from stillbirths_package.utils import REGION_BY_PROVINCE_CODE
 
 
