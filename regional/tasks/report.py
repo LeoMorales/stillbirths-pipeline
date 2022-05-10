@@ -6,6 +6,7 @@ Build reports
 """
 import os
 from stillbirths_package.reporte import Report
+import glob
 
 
 # + tags=[]
@@ -34,8 +35,21 @@ def create_annual(product, upstream, rates_param, deceases_codes):
     report.add_section(
         '<h2 align="center">Lineplot de tasas anuales por regiones</h2>',
         str(upstream['lineplots_by_years']),
+        finish_with_page_break=True
+    )
+
+    # add stacked:
+    report.add_section(
+        '<h2 align="center">Porcentajes por código de defuncion, por regiones</h2>',
         finish_with_page_break=False
     )
+
+    for stackedImage in glob.glob(f"{str(upstream['draw_stacked_regional_quinquenal'])}/*.png"):
+        report.add_section(
+            '<h3 align="center"></h3>',
+            str(stackedImage),
+            finish_with_page_break=False
+        )
 
     report.build(str(product))
 

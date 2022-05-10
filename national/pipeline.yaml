@@ -1,0 +1,38 @@
+tasks:
+  # Get:
+  - source: tasks.raw.get_births
+    name: raw__get_births
+    params:
+      raw_births_file: '{{dataset_nacimientos_path}}'
+    product:
+      data: _products/raw/births.parquet
+    on_finish: tests.raw.test_births_clean
+
+  - source: tasks.raw.get_stillbirths
+    name: raw__get_stillbirths
+    params:
+      raw_stillbirths_file: '{{dataset_mortinatos_path}}'
+      deceases_codes: '{{deceases_codes}}'
+    product: 
+      data: _products/raw/stillbirths.parquet
+    on_finish: tests.raw.test_stillbirths_clean
+
+  - source: tasks.raw.get_cause_percentages
+    name: raw__get_cause_percentages_quinquennial # name: get_percentage_for_each_cause
+    params:
+      raw_stillbirths_file: '{{dataset_mortinatos_path}}'
+      deceases_codes: '{{deceases_codes}}'
+    product: _products/raw/porcentajes-de-cada-causa.parquet
+
+  - source: tasks.percentage_figures.national_quinquennial
+    name: percentage_figures__draw_national_percentages_quinquenal
+    product: _products/percentages/national
+
+  # Stacked:
+  - source: tasks.stacked_arrange.get_national_quinquennial
+    name: stacked_arrange__get_national_quinquennial
+    product: _products/stacked/stacked_arrange_national.parquet
+
+  - source: tasks.stacked_draw.national_quinquennial
+    name: stacked_draw__national_quinquennial
+    product: _products/stacked/stacked-nacional-quinquenal.png

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # + tags=[]
 """
-Plot departamental rates by years
+Profiling rates by years
 """
 import pandas
 from pandas_profiling import ProfileReport
@@ -15,15 +15,8 @@ product = None
 # # Leer tasas
 
 # + tags=[]
-#df = pandas.read_parquet(upstream['get_annual']['data'])
-df = pandas.read_parquet('../_products/rates/rates-by-year.parquet')
+df = pandas.read_parquet(upstream['get_annual']['data'])
 # -
-
-df.head()
-
-df.nacimientos.sum()
-
-df.fallecimientos.sum()
 
 # # Profile
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Percentages
+Raw NATIONAL
 """
 import pandas
 import glob
@@ -15,10 +15,130 @@ def __clean_province_code(code):
     return '0'+str(int(code))\
         if (len(str(int(code))) == 1) else str(int(code))
 
-def for_each_cause(product, raw_stillbirths_file, deceases_codes):
-    '''
-    Calcula el porcentaje que representa cada codigo de muerte (sobre el total de muertes en el periodo)
+def get_births(product, raw_births_file):
+    # # Nacidos vivos
+    df = pandas.read_excel(
+        raw_births_file,
+        dtype={
+            'PROVRES': object,
+        }
+    )
 
+    # # Limpiar
+    # limpiamos las columnas
+    df['CUENTA'] = \
+        df['CUENTA'].astype('int')
+    df.loc[:, 'provincia_id'] = \
+        df.loc[:, 'PROVRES'].apply(__clean_province_code)
+    df = df.rename(
+        columns={'AÑO': 'año', 'CUENTA': 'nacimientos'}
+    )
+    df['año'] = \
+        df['año'].astype(int)
+
+    # obtener nombre de la region
+    df['region_nombre'] = df.provincia_id.apply(
+        lambda provincia_id: REGION_BY_PROVINCE_CODE.get(provincia_id, None)
+    )
+    df = df.dropna(subset=['region_nombre'])
+
+    # # Filtrar columnas
+    output_df = \
+        df\
+            [['region_nombre', 'año', 'nacimientos']]      
+
+    # # Agrupar
+    output_df = \
+        output_df\
+            .groupby(['region_nombre', 'año'])\
+            .sum()\
+            .reset_index()
+
+    # Guardar
+    # df.to_csv(str(product['data']), index=False)
+    output_df.to_parquet(
+        str(product['data']), index=False)
+
+def get_stillbirths(product, raw_stillbirths_file, deceases_codes):
+    # # Mortinatos
+    raw_df = pandas.read_excel(
+        raw_stillbirths_file,
+        dtype={
+            'JURIREG': int,
+            'PROVRES': int,
+            'CAUSAMUERCIE10': str,
+            'AÑO': int,
+        }
+    )
+
+    raw_df = raw_df.rename(columns={
+        'JURIREG': 'jurisdiccion_codigo',
+        'PROVRES': 'provincia_codigo',
+        'DEPRES': 'departamento_codigo',
+        'CAUSAMUERCIE10': 'codigo_muerte',
+        'AÑO': 'año',
+        'TIEMGEST': 'tiempo_gestacion',
+        'PESOFETO': 'peso_feto',
+    })
+
+    raw_df = raw_df[['año', 'provincia_codigo', 'codigo_muerte']]
+
+    # # Limpiar
+    df = raw_df.copy()
+    df.loc[:, 'provincia_id'] = \
+        df.loc[:, 'provincia_codigo'].apply(__clean_province_code)
+    df['año'] = \
+        df['año']\
+            .astype('str')\
+            .str\
+            .replace('.', '')\
+            .replace(
+                {
+                    '201': 2010,
+                    '20': 2000,
+                    '98': 1998,
+                    '97': 1997,
+                    '99': 1999,
+                    '0': 2000,
+                    '9': 2009,
+                    '2033': 2003
+                }
+            )\
+            .astype(int)
+
+    # obtener nombre de la region solo para eliminar aquellos que no sean referenciables a una región:
+    df['region_nombre'] = df.provincia_id.apply(
+        lambda provincia_id: REGION_BY_PROVINCE_CODE.get(provincia_id, None)
+    )
+    df = df.dropna(subset=['region_nombre'])
+    
+    # limpiar el código de muerte
+    df['codigo_muerte'] = df.codigo_muerte.str.strip().str.upper()    
+    
+    deceases_codes = list(set([code.strip().upper() for code in deceases_codes]))
+    df = df[df.codigo_muerte.isin(deceases_codes)]
+
+    # # Agrupar
+    output_df = \
+        df\
+        [['region_nombre', 'año', 'codigo_muerte']]\
+        .groupby(['region_nombre', 'año'])\
+        .count()\
+        .reset_index()\
+        .rename(columns={'codigo_muerte': 'fallecimientos'})
+    
+    # # Guardar
+    output_df.to_parquet(
+        str(product['data']), index=False)
+
+
+def get_cause_percentages(product, raw_stillbirths_file, deceases_codes):
+    '''
+    Calcula el porcentaje que representa cada codigo de muerte (sobre el total de muertes en el periodo).
+    Los códigos contemplados son los que se encuentran indicados en en deceases_codes.
+
+    TODO: Que la tarea genere dos datasets, uno quinquenal y otro anual.
+    
     [In]:
         AÑO  JURIREG  PROVRES  DEPRES CAUSAMUERCIE10  TIEMGEST  PESOFETO  Unnamed: 7 Unnamed: 8  
     0  1994       62       62     NaN            A41      20.0     300.0         NaN        NaN  
@@ -82,7 +202,7 @@ def for_each_cause(product, raw_stillbirths_file, deceases_codes):
             )\
             .astype(int)
 
-    # obtener nombre de la region
+    # obtener nombre de la region solo para eliminar aquellos que no sean referenciables a una región:
     df['region_nombre'] = df.provincia_id.apply(
         lambda provincia_id: REGION_BY_PROVINCE_CODE.get(provincia_id, None)
     )
@@ -105,32 +225,9 @@ def for_each_cause(product, raw_stillbirths_file, deceases_codes):
 
     df['period'] = df['año'].apply(lambda year: [p for p, y in periods.items() if (year in y)][0])
 
-    # Guardar
-    df.to_parquet(str(product), index=False)
-
-
-def get_regional_quinquenal(product, upstream):
-    '''
-    Calcula el porcentaje que representa cada codigo de muerte (sobre el total de muertes en el periodo)
-    
-        codigo_muerte   count   region  period      percentage
-    0   P02             7269    Centro  1994-1998   33.570406
-    1   P20             5923    Centro  1994-1998   27.354177
-    2   P96             1957    Centro  1994-1998   9.038009
-    3   P00             1850    Centro  1994-1998   8.543851
-    4   P01             1047    Centro  1994-1998   4.835358
-    '''
-    #raw_stillbirths_file = '/home/lmorales/work/stillbirth-book/datasets/defunciones-data-salud/Defunciones fetales 1994 2019 AHORA SI.xlsx'
-    #deceases_codes = ['A20', 'A34', 'A41', 'A50']
-    
-    # =====
-    # Data
-    df = pandas.read_parquet(upstream['get_percentage_for_each_cause'])
-
     # - get the amount for each period
     dfs = []
-    for (region_i, period_i), df_period_i in df.groupby(['region_nombre', 'period']):
-
+    for period_i, df_period_i in df.groupby('period'):
         df_period_i_by_codes = \
             df_period_i\
                 .codigo_muerte.value_counts()\
@@ -139,35 +236,17 @@ def get_regional_quinquenal(product, upstream):
                     codigo_muerte='count',
                     index='codigo_muerte'
                 ))
-
-        df_period_i_by_codes['region'] = region_i
+        
         df_period_i_by_codes['period'] = period_i
 
         period_total = df_period_i_by_codes['count'].sum()
         df_period_i_by_codes['percentage'] = df_period_i_by_codes['count'] * 100 / period_total
-        
-        # append to list:
+        # append to a list
         dfs.append(df_period_i_by_codes)
 
-    df_regions = pandas.concat(dfs).reset_index(drop=True)
+    df_output = pandas.concat(dfs).reset_index(drop=True)   
 
-    # # Guardar
-    df_regions.to_parquet(
-        str(product), index=False)
-
-# + active=""
-# # ESTADISTICAS SUMARIAS
-#
-# import pandas
-#
-# df = pandas.read_parquet('../_products/percentages/percentages_country_quinquenal.parquet')
-# print(df.head())
-# print()
-#
-# for period in df.period.unique():
-#     print(f"{period}:")
-#     print(df[df.period == period].sort_values(by=["percentage"], ascending=False).head(5).reset_index(drop=True))
-#     print()
-# -
+    # Guardar
+    df_output.to_parquet(str(product), index=False)
 
 

@@ -9,10 +9,23 @@ tasks:
 
   - source: tasks.raw.get_stillbirths
     params:
-      raw_stillbirths_folder: '{{dataset_mortinatos_path}}'
+      raw_stillbirths_file: '{{dataset_mortinatos_path}}'
+      deceases_codes: '{{deceases_codes}}'      
     product: 
       data: _products/raw/stillbirths.parquet
     on_finish: tests.raw.test_stillbirths_clean
+
+  - source: tasks.raw.get_percentage_for_each_cause
+    name: raw__get_percentage_for_each_cause
+    params:
+      raw_stillbirths_file: '{{dataset_mortinatos_path}}'
+      deceases_codes: '{{deceases_codes}}'      
+    product: _products/raw/percentage-causes.parquet
+
+  # Aggr:
+  - source: tasks.aggr.get_percentages_for_each_code_group
+    name: aggr__get_percentages_for_each_code_group
+    product: _products/aggr/percentage-causes-aggr.parquet
 
   # Process
   - source: tasks.rates.get_annual
@@ -22,10 +35,32 @@ tasks:
       data: _products/rates/rates-by-year.parquet
 
   - source: tasks.rates.get_quinquenial
+    name: rates__get_quinquenial
     params:
       rates_over: '{{rates_people_param}}'
     product: 
       data: _products/rates/rates-by-quinquenios.parquet
+
+  # Clustering process
+  - source: tasks.spatial_processing.get_quinquennial_labels
+    name: spatial_processing__get_quinquennial_labels
+    product: 
+      cluster_labels: _products/spatial_processing/etiquetas-cluster-por-quinquenios.parquet
+      moran_results: _products/spatial_processing/moran-por-quinquenios.parquet
+
+  - source: tasks.spatial_processing.get_lisa_labels_for_each_decease_code
+    name: spatial_processing__get_lisa_labels_for_each_decease_code
+    product: 
+      cluster_labels: _products/spatial_processing/codigos-etiquetas-cluster-por-quinquenios.parquet
+      moran_results: _products/spatial_processing/codigos-moran-por-quinquenios.parquet
+
+  - source: tasks.clustermaps.get_quinquennial
+    name: clustermap_quinquennial
+    product: _products/clustermaps/tasas-clustermap-quinquenal.png
+
+  - source: tasks.clustermaps.get_quinquennial_for_codes
+    name: clustermap__quinquennial_for_codes
+    product: _products/clustermaps/por-codigo/
 
   # Figures:
   - source: tasks.maps.by_years
@@ -35,6 +70,10 @@ tasks:
   - source: tasks.maps.by_quinquenios
     name: maps_by_quinquenios
     product: _products/maps/maps-by-quinquenios.png
+
+  - source: tasks.maps.get_code_percentages_quinquenios
+    name: maps__code_percentages_quinquenios
+    product: _products/maps/por-codigo/
 
   - source: tasks.lineplots.by_years
     name: lineplots_by_years

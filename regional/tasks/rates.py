@@ -96,3 +96,16 @@ def get_quinquenial(product, upstream, rates_over):
     df_rates_quinquenal.to_parquet(
         str(product['data']), index=False
     )
+
+# + active=""
+# # ESTADISTICAS SUMARIAS:
+#
+# df = pandas.read_parquet('../_products/rates/rates-by-quinquenios.parquet')
+#
+# print(df.head(10))
+# print()
+#
+# print(df.groupby("periodo").sum().drop(columns="tasa"))
+# -
+
+

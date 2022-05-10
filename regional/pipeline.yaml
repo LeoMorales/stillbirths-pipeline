@@ -15,35 +15,35 @@ tasks:
       data: _products/raw/stillbirths.parquet
     on_finish: tests.raw.test_stillbirths_clean
 
-  # Percentages:
-  - source: tasks.percentages.clean
+  # Get -> percentages:
+  - source: tasks.percentages.for_each_cause
+    name: get_percentage_for_each_cause
     params:
       raw_stillbirths_file: '{{dataset_mortinatos_path}}'
       deceases_codes: '{{deceases_codes}}'
-    product: 
-      data: _products/percentages/clean.parquet
+    product: _products/percentages/percentage_for_each_cause.parquet
 
-  - source: tasks.percentages.get_quinquenal_national_level
-    product: 
-      data: _products/percentages/percentages_country_quinquenal.parquet
-
-  - source: tasks.percentages.get_quinquenal_regional_level
-    product: 
-      data: _products/percentages/percentages_region_quinquenal.parquet
-
-  - source: tasks.percentage_figures.draw_quinquenal_national_level
-    product: _products/percentages/national
+  # Percentages:
+  - source: tasks.percentages.get_regional_quinquenal
+    name: get_regional_percentages_at_quinquenal
+    product: _products/percentages/percentages_region_quinquenal.parquet
 
   - source: tasks.percentage_figures.draw_quinquenal_regional_level
+    name: draw_regional_percentages_at_quinquenal
     product: _products/percentages/regional
 
   # Stacked:
-  - source: tasks.stacked.arrange
-    product: _products/stacked/stacked_arrange.parquet
+  - source: tasks.stacked_arrange.get_regional_quinquenal
+    name: get_regional_arranged_at_quinquenal
+    product: _products/stacked/stacked_arrange_regional.parquet
 
-  - source: tasks.stacked.draw
-    product: _products/stacked/stacked-national.png
+  - source: tasks.stacked_draw.regional_quinquenal
+    name: draw_stacked_regional_quinquenal
+    product: _products/stacked/quinquenal
 
+  # Rates:
+  # -----
+  #
   # Process
   - source: tasks.rates.get_annual
     params:

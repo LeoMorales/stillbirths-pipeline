@@ -162,8 +162,9 @@ def __create_figure(names, counts, output_destination,
     fig.savefig(output_destination, dpi=300)
 
 
-def draw_quinquenal_regional_level(product, upstream):
-    ''' Crea una figura para cada período y region'''
+def national_quinquennial(product, upstream):
+    ''' Crea una figura para cada período.'''
+    
     # ==========
     # setup:
     parent = Path(product)
@@ -178,15 +179,15 @@ def draw_quinquenal_regional_level(product, upstream):
     
     # ==========
     # data:
-    df_region = pandas.read_parquet(
-        upstream['get_regional_percentages_at_quinquenal'])
+    df_country = pandas.read_parquet(
+        upstream['raw__get_cause_percentages_quinquennial'])
     
-    LIMIT = 0.1
     # ==========
     # loop:
-    for (region_i, period_i), data_i in df_region.groupby(['region', 'period']):
+    for period_i, data_i in df_country.groupby('period'):
         
         # period_i like '1994-1998'
+        LIMIT = 0.1
         plot_data = data_i[data_i.percentage > LIMIT]
 
         # una sola barra para los otros códigos
@@ -212,7 +213,6 @@ def draw_quinquenal_regional_level(product, upstream):
 
         __create_figure(
             names, counts,
-            f"{str(product)}/{region_i}-{period_i}.png",
-            subtitle=f"Region {region_i.capitalize()}. Período {period_i}. Porcentajes mayores a {LIMIT}%",
-            draw_label_on_the_bar_until=2.5
+            f"{str(product)}/{period_i}.png",
+            subtitle=f"Argentina. Período {period_i}. Porcentajes mayores a {LIMIT}%"
         )

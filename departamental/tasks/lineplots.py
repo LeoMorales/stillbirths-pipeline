@@ -222,7 +222,7 @@ def by_quinquennios(product, upstream):
 
     ## read data
     #df = pandas.read_parquet('../_products/rates/rates-by-quinquenios.parquet')
-    df = pandas.read_parquet(upstream['get_quinquenial']['data'])
+    df = pandas.read_parquet(upstream['rates__get_quinquenial']['data'])
 
     SHAPE_DIR = '/home/lmorales/work/stillbirth-book/notebooks/shapes/departamentos.geojson'
     shape = geopandas.read_file(SHAPE_DIR)
